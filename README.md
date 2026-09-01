@@ -1,9 +1,4 @@
-# Code Reviewer AI
-
-Code Reviewer AI adalah aplikasi full-stack untuk melakukan audit kode secara otomatis menggunakan AI.  
-Repository ini terdiri dari backend NestJS (API + worker queue) dan frontend Angular (editor + dashboard hasil audit).
-
-## Deskripsi Profesional
+## Deskripsi
 
 Platform ini membantu developer mengidentifikasi kerentanan keamanan, bug, isu performa, dan style issue dari potongan kode secara cepat.  
 Proses audit berjalan asinkron melalui queue, lalu hasil analisis disimpan ke database dan ditampilkan dalam antarmuka yang mudah dibaca.
@@ -35,10 +30,10 @@ Buat file `.env`:
 
 ```env
 DATABASE_URL=YOUR_POSTGRES_CONNECTION_URL
-REDIS_HOST=localhost
-REDIS_PORT=6379
+REDIS_HOST=
+REDIS_PORT=
 GROQ_API_KEY=your_groq_api_key
-PORT=3000
+PORT=
 ```
 
 Setup database:
