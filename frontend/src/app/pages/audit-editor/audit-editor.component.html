@@ -1,0 +1,126 @@
+<div class="flex h-screen bg-slate-900 text-slate-100 font-sans">
+  <!-- LEFT PANEL: Monaco Code Editor -->
+  <div class="w-1/2 flex flex-col border-r border-slate-700">
+    <div class="p-4 bg-slate-800 flex items-center justify-between border-b border-slate-700">
+      <div class="flex items-center space-x-2">
+        <div class="">
+          <label class="text-xs text-slate-400">Filename:</label>
+          <input
+            [(ngModel)]="filename"
+            placeholder="Enter filename (e.g., app.ts)"
+            class="bg-slate-700 text-xs px-2 py-1 rounded outline-none border border-slate-600"
+          />
+        </div>
+        <select
+          [ngModel]="language"
+          (ngModelChange)="onLanguageChange($event)"
+          class="bg-slate-700 text-xs px-2 py-1 rounded outline-none border border-slate-600"
+        >
+          <option value="">Select Language</option>
+          <option value="typescript">TypeScript</option>
+          <option value="javascript">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+        </select>
+      </div>
+
+      <button
+        (click)="startAudit()"
+        [disabled]="isSubmitting()"
+        class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-600 text-white px-4 py-1.5 rounded text-xs font-semibold flex items-center gap-2"
+      >
+        @if (isSubmitting()) {
+          <span>Scanning AI...</span>
+        } @else {
+          <span>Run Security Audit</span>
+        }
+      </button>
+    </div>
+
+    <input
+      [(ngModel)]="code"
+      class="bg-slate-700 text-xs px-2 py-1 rounded outline-none border border-slate-600"
+    />
+
+    <!-- <div class="flex-1">
+      @if (isBrowser) {
+        <ngx-monaco-editor class="h-full w-full" [options]="monacoOptions" [(ngModel)]="code">
+        </ngx-monaco-editor>
+      }
+    </div> -->
+  </div>
+
+  <!-- RIGHT PANEL: Audit Findings & AI Security Report -->
+  <div class="w-1/2 flex flex-col overflow-y-auto bg-slate-950 p-6">
+    @if (!auditResult() && !isSubmitting()) {
+      <div class="flex flex-col items-center justify-center h-full text-slate-500">
+        <p>Klik "Run Security Audit" untuk mendeteksi celah keamanan dan bug pada kode Anda.</p>
+      </div>
+    }
+
+    @if (isSubmitting() && (!auditResult() || auditResult()?.status === 'PROCESSING')) {
+      <div class="flex flex-col items-center justify-center h-full space-y-3">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+        <p class="text-sm text-slate-400">
+          AI sedang memindai AST, SQL Injection, XSS, dan Code Smells...
+        </p>
+      </div>
+    }
+
+    @if (auditResult() && auditResult()?.status === 'COMPLETED') {
+      <div class="space-y-6">
+        <!-- Score Card -->
+        <div
+          class="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-lg"
+        >
+          <div>
+            <h2 class="text-lg font-bold">Audit Executive Summary</h2>
+            <p class="text-xs text-slate-400 mt-1">{{ auditResult()?.summary }}</p>
+          </div>
+          <div class="flex flex-col items-center">
+            <span
+              class="text-3xl font-extrabold"
+              [ngClass]="(auditResult()?.score ?? 0) >= 70 ? 'text-green-400' : 'text-red-400'"
+            >
+              {{ auditResult()?.score }}/100
+            </span>
+            <span class="text-[10px] uppercase text-slate-500">Security Score</span>
+          </div>
+        </div>
+
+        <!-- Issues List -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">
+            Detected Vulnerabilities & Issues ({{ auditResult()?.issues?.length }})
+          </h3>
+
+          @for (issue of auditResult()?.issues; track issue.id) {
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span
+                  class="text-xs px-2 py-0.5 rounded font-bold"
+                  [ngClass]="getSeverityClass(issue.severity)"
+                >
+                  {{ issue.severity }}
+                </span>
+                <span class="text-xs text-slate-500 font-mono">Line {{ issue.lineNumber }}</span>
+              </div>
+
+              <h4 class="text-sm font-bold text-slate-200">{{ issue.title }}</h4>
+              <p class="text-xs text-slate-400 leading-relaxed">{{ issue.description }}</p>
+
+              <div class="mt-2 pt-2 border-t border-slate-800">
+                <span class="text-[11px] font-semibold text-indigo-400 uppercase"
+                  >Suggested Fix:</span
+                >
+                <pre
+                  class="bg-slate-950 p-2 rounded text-xs font-mono text-green-400 mt-1 overflow-x-auto"
+                ><code>{{ issue.suggestedFix }}</code></pre>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
