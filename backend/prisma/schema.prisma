@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuditStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model AuditRequest {
+  id          String       @id @default(uuid())
+  filename    String
+  language    String
+  sourceCode  String       @db.Text
+  status      AuditStatus  @default(PENDING)
+  score       Int?         // 0 - 100
+  summary     String?      @db.Text
+  issues      Issue[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Issue {
+  id             String       @id @default(uuid())
+  auditRequestId String
+  auditRequest   AuditRequest @relation(fields: [auditRequestId], references: [id], onDelete: Cascade)
+  type           String       // SECURITY, PERFORMANCE, STYLE, BUG
+  severity       String       // CRITICAL, HIGH, MEDIUM, LOW
+  lineNumber     Int
+  title          String
+  description    String       @db.Text
+  suggestedFix   String       @db.Text
+}
