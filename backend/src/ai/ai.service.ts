@@ -21,7 +21,7 @@ export class AIService {
 
   async analyzeCode(code: string, language: string): Promise<AuditAIResponse> {
     const prompt = `
-You are an expert Senior Security Engineer and Code Reviewer. 
+You are an expert Senior Security Engineer and Code Reviewer with 10+ years of experience. 
 Analyze the following ${language} code for security vulnerabilities, bugs, performance issues, and style violations.
 
 Respond ONLY in valid JSON format. Do not add markdown formatting, quotes, or conversational intro/outro text.

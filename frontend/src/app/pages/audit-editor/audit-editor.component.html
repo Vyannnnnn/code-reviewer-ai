@@ -1,22 +1,21 @@
-<div class="flex h-screen bg-slate-900 text-slate-100 font-sans">
-  <!-- LEFT PANEL: Monaco Code Editor -->
-  <div class="w-1/2 flex flex-col border-r border-slate-700">
-    <div class="p-4 bg-slate-800 flex items-center justify-between border-b border-slate-700">
-      <div class="flex items-center space-x-2">
-        <div class="">
-          <label class="text-xs text-slate-400">Filename:</label>
-          <input
-            [(ngModel)]="filename"
-            placeholder="Enter filename (e.g., app.ts)"
-            class="bg-slate-700 text-xs px-2 py-1 rounded outline-none border border-slate-600"
-          />
-        </div>
+<div class="flex h-screen bg-red-950 text-slate-100 font-sans antialiased overflow-hidden">
+  <!-- LEFT PANEL: Editor Workspace -->
+  <div class="w-[45%] flex flex-col border-r border-slate-800 bg-slate-900">
+    <div
+      class="h-14 px-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0"
+    >
+      <div class="flex items-center gap-2 flex-1">
+        <input
+          [ngModel]="filename()"
+          (ngModelChange)="filename.set($event)"
+          placeholder="app.ts"
+          class="w-full bg-slate-800 text-slate-200 text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-mono"
+        />
         <select
-          [ngModel]="language"
+          [ngModel]="language()"
           (ngModelChange)="onLanguageChange($event)"
-          class="bg-slate-700 text-xs px-2 py-1 rounded outline-none border border-slate-600"
+          class="bg-slate-800 text-slate-300 text-xs px-2.5 py-1.5 rounded-md outline-none border border-slate-700 font-semibold"
         >
-          <option value="">Select Language</option>
           <option value="typescript">TypeScript</option>
           <option value="javascript">JavaScript</option>
           <option value="python">Python</option>
@@ -27,99 +26,134 @@
       <button
         (click)="startAudit()"
         [disabled]="isSubmitting()"
-        class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-600 text-white px-4 py-1.5 rounded text-xs font-semibold flex items-center gap-2"
+        class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 text-white px-4 py-1.5 rounded-md text-xs font-semibold flex items-center gap-2"
       >
-        @if (isSubmitting()) {
-          <span>Scanning AI...</span>
-        } @else {
-          <span>Run Security Audit</span>
-        }
+        <span>Run Security Audit</span>
       </button>
     </div>
 
-    <input
-      [(ngModel)]="code"
-      class="bg-slate-700 text-xs px-2 py-1 rounded outline-none border border-slate-600"
-    />
-
-    <!-- <div class="flex-1">
+    <!-- Monaco Code Editor Area -->
+    <div class="flex-1 flex flex-col relative bg-slate-900 overflow-hidden">
       @if (isBrowser) {
-        <ngx-monaco-editor class="h-full w-full" [options]="monacoOptions" [(ngModel)]="code">
+        <ngx-monaco-editor
+          class="h-full w-full flex-1"
+          [options]="monacoOptions"
+          [ngModel]="code()"
+          (ngModelChange)="code.set($event)"
+        >
         </ngx-monaco-editor>
+      } @else {
+        <div class="p-4 text-xs font-mono text-slate-500">Memuat Editor...</div>
       }
-    </div> -->
+    </div>
   </div>
 
-  <!-- RIGHT PANEL: Audit Findings & AI Security Report -->
-  <div class="w-1/2 flex flex-col overflow-y-auto bg-slate-950 p-6">
-    @if (!auditResult() && !isSubmitting()) {
-      <div class="flex flex-col items-center justify-center h-full text-slate-500">
-        <p>Klik "Run Security Audit" untuk mendeteksi celah keamanan dan bug pada kode Anda.</p>
-      </div>
-    }
-
-    @if (isSubmitting() && (!auditResult() || auditResult()?.status === 'PROCESSING')) {
-      <div class="flex flex-col items-center justify-center h-full space-y-3">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
-        <p class="text-sm text-slate-400">
-          AI sedang memindai AST, SQL Injection, XSS, dan Code Smells...
-        </p>
-      </div>
-    }
-
+  <!-- RIGHT PANEL: Dashboard & Audit Findings -->
+  <div class="w-[55%] flex flex-col overflow-y-auto bg-slate-950 p-6 space-y-6">
     @if (auditResult() && auditResult()?.status === 'COMPLETED') {
-      <div class="space-y-6">
-        <!-- Score Card -->
+      <!-- Top Section: Metrik & Pie Chart -->
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Executive Summary & Scorecard -->
         <div
-          class="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-lg"
+          class="col-span-6 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between"
         >
           <div>
-            <h2 class="text-lg font-bold">Audit Executive Summary</h2>
-            <p class="text-xs text-slate-400 mt-1">{{ auditResult()?.summary }}</p>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+              Executive Summary
+            </h2>
+            <p class="text-xs text-slate-300 leading-relaxed">{{ auditResult()?.summary }}</p>
           </div>
-          <div class="flex flex-col items-center">
-            <span
-              class="text-3xl font-extrabold"
-              [ngClass]="(auditResult()?.score ?? 0) >= 70 ? 'text-green-400' : 'text-red-400'"
+          <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Security Score</span>
+            <span class="text-2xl font-extrabold text-amber-400"
+              >{{ auditResult()?.score }}/100</span
             >
-              {{ auditResult()?.score }}/100
-            </span>
-            <span class="text-[10px] uppercase text-slate-500">Security Score</span>
           </div>
         </div>
 
-        <!-- Issues List -->
-        <div class="space-y-4">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">
-            Detected Vulnerabilities & Issues ({{ auditResult()?.issues?.length }})
+        <!-- Severity Breakdown Pie Chart -->
+        <div
+          class="col-span-6 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between"
+        >
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+            Severity Distribution
           </h3>
+          <div class="relative h-32 w-full flex items-center justify-center">
+            <canvas
+              baseChart
+              [data]="pieChartData()"
+              [options]="pieChartOptions"
+              [type]="pieChartType"
+            >
+            </canvas>
+          </div>
+        </div>
+      </div>
 
-          @for (issue of auditResult()?.issues; track issue.id) {
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2">
-              <div class="flex items-center justify-between">
-                <span
-                  class="text-xs px-2 py-0.5 rounded font-bold"
-                  [ngClass]="getSeverityClass(issue.severity)"
-                >
-                  {{ issue.severity }}
-                </span>
-                <span class="text-xs text-slate-500 font-mono">Line {{ issue.lineNumber }}</span>
-              </div>
+      <!-- Issues List & Diff Visualizer -->
+      <div class="space-y-4">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">
+          Detected Vulnerabilities ({{ auditResult()?.issues?.length }})
+        </h3>
 
-              <h4 class="text-sm font-bold text-slate-200">{{ issue.title }}</h4>
-              <p class="text-xs text-slate-400 leading-relaxed">{{ issue.description }}</p>
-
-              <div class="mt-2 pt-2 border-t border-slate-800">
-                <span class="text-[11px] font-semibold text-indigo-400 uppercase"
-                  >Suggested Fix:</span
-                >
-                <pre
-                  class="bg-slate-950 p-2 rounded text-xs font-mono text-green-400 mt-1 overflow-x-auto"
-                ><code>{{ issue.suggestedFix }}</code></pre>
+        @for (issue of auditResult()?.issues; track issue.id) {
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+            <!-- Issue Header -->
+            <div class="flex items-start justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="text-[10px] px-2 py-0.5 rounded font-extrabold uppercase"
+                    [ngClass]="getSeverityClass(issue.severity)"
+                  >
+                    {{ issue.severity }}
+                  </span>
+                  <span
+                    class="text-xs font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800"
+                  >
+                    Line {{ issue.lineNumber }}
+                  </span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-100 pt-1">{{ issue.title }}</h4>
               </div>
             </div>
-          }
-        </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed">{{ issue.description }}</p>
+
+            <!-- Code Diff Visualizer Block via Highlight.js -->
+            <div class="space-y-2 pt-2 border-t border-slate-800/80">
+              <span class="text-[11px] font-bold text-indigo-400 uppercase tracking-wider block">
+                Suggested Fix (Diff)
+              </span>
+
+              <div
+                class="bg-slate-950 rounded-lg border border-slate-800 overflow-hidden font-mono text-xs"
+              >
+                <!-- Line Removed (-) -->
+                @if (issue.originalCode) {
+                  <div
+                    class="bg-rose-500/10 border-l-4 border-rose-500 p-2 text-rose-200 flex items-start gap-2 overflow-x-auto"
+                  >
+                    <span class="select-none text-rose-500 font-bold">-</span>
+                    <pre
+                      class="m-0"
+                    ><code [innerHTML]="highlightCode(issue.originalCode, language())"></code></pre>
+                  </div>
+                }
+
+                <!-- Line Added (+) -->
+                <div
+                  class="bg-emerald-500/10 border-l-4 border-emerald-500 p-2 text-emerald-200 flex items-start gap-2 overflow-x-auto"
+                >
+                  <span class="select-none text-emerald-500 font-bold">+</span>
+                  <pre
+                    class="m-0"
+                  ><code [innerHTML]="highlightCode(issue.suggestedFix, language())"></code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
   </div>

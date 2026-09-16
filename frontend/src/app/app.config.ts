@@ -17,7 +17,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(withEventReplay(), withNoIncrementalHydration()),
     importProvidersFrom(MonacoEditorModule.forRoot({
-      baseUrl: 'assets/monaco-editor'
+      baseUrl: 'assets/monaco-editor/min/vs',
     }))
   ],
 };
